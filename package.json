@@ -1,48 +1,48 @@
 {
-    "name": "clearmail",
-    "version": "1.0.0",
-    "main": "server.js",
-    "scripts": {
-        "start": "node server.js",
-        "dev": "nodemon server.js",
-        "lint": "eslint .",
-        "format": "prettier --write .",
-        "test": "jest",
-        "prepare": "husky install"
-    },
-    "keywords": [
-        "email",
-        "processing",
-        "automation"
-    ],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "axios": "^1.7.9",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.7",
-        "express": "^4.21.2",
-        "helmet": "^7.1.0",
-        "imap": "^0.8.19",
-        "imapflow": "^1.0.171",
-        "js-yaml": "^4.1.0",
-        "mailparser": "^3.7.2",
-        "morgan": "^1.10.0",
-        "openai": "^4.77.0",
-        "pem": "^1.14.8",
-        "pm2": "^5.4.3",
-        "winston": "^3.11.0"
-    },
-    "devDependencies": {
-        "@types/express": "^4.17.21",
-        "@types/node": "^20.10.6",
-        "eslint": "^8.56.0",
-        "eslint-config-prettier": "^9.1.0",
-        "husky": "^8.0.3",
-        "jest": "^29.7.0",
-        "nodemon": "^3.0.2",
-        "prettier": "^3.1.1",
-        "supertest": "^6.3.3"
-    },
-    "description": "Email processing and automation system"
+  "name": "clearmail",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "jest",
+    "prepare": "husky install"
+  },
+  "keywords": [
+    "email",
+    "processing",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^7.1.0",
+    "imap": "^0.8.19",
+    "imapflow": "^1.0.171",
+    "js-yaml": "^4.1.0",
+    "mailparser": "^3.7.2",
+    "morgan": "^1.10.0",
+    "openai": "^4.77.0",
+    "pem": "^1.14.8",
+    "pm2": "^5.4.3",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "prettier": "^3.1.1",
+    "supertest": "^6.3.3"
+  },
+  "description": "Email processing and automation system"
 }
