@@ -66,9 +66,13 @@ async function main() {
             app.get('/process-emails', async (req, res, next) => {
                 try {
                     logger.info('Manual email processing triggered');
-                    const timestamp =
-                        req.query.timestamp ||
-                        (await getLastTimestamp(config.settings.timestampFilePath));
+                    let timestamp = null;
+                    
+                    if (config.settings.useTimestampFilter) {
+                        timestamp = req.query.timestamp || 
+                            await getLastTimestamp(config.settings.timestampFilePath);
+                    }
+                    
                     const results = await processEmails(timestamp);
                     res.status(results.statusCode).json(results);
                 } catch (error) {

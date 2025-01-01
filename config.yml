@@ -14,6 +14,9 @@ settings:
     # process any new unread emails every x seconds
     refreshInterval: 15
 
+    # if true, use timestamp to only process new emails. if false, process all emails in inbox
+    useTimestampFilter: false
+
     # if true, process both read and unread emails. if false, only process unread emails
     processReadEmails: true
 

@@ -110,7 +110,7 @@ class EmailProcessor {
                         action: 'flag',
                         status: 'started',
                     });
-                    await this.client.messageFlagsAdd(uid, ['\\Flagged']);
+                    await this.client.messageFlagsAdd(uid, ['\\Flagged'], { uid: true, useLabels: true });
                     logger.info(`Successfully flagged email #${uid}`, {
                         action: 'flag',
                         status: 'completed',
@@ -123,7 +123,7 @@ class EmailProcessor {
                         action: 'mark_read',
                         status: 'started',
                     });
-                    await this.client.messageFlagsAdd(uid, ['\\Seen']);
+                    await this.client.messageFlagsAdd(uid, ['\\Seen'], { uid: true, useLabels: true });
                     logger.info(`Successfully marked email #${uid} as read`, {
                         action: 'mark_read',
                         status: 'completed',
@@ -144,10 +144,13 @@ class EmailProcessor {
                 try {
                     // First select the INBOX to ensure we're in the right context
                     await this.client.mailboxOpen('INBOX');
-
+                    
                     // Then try to move the message
-                    await this.client.messageMove(uid, folderToMoveTo);
-
+                    await this.client.messageMove(uid, folderToMoveTo, { uid: true, useLabels: true });
+                    
+                    // Close mailbox to commit changes
+                    await this.client.mailboxClose();
+                    
                     logger.info(`Successfully moved email #${uid}`, {
                         action: 'move',
                         status: 'completed',
@@ -158,12 +161,14 @@ class EmailProcessor {
                         error: moveError.message,
                         stack: moveError.stack,
                     });
-
+                    
                     // Try to create the folder and retry the move if it failed
                     try {
                         logger.info(`Attempting to create folder ${folderToMoveTo} and retry move`);
                         await this.client.mailboxCreate(folderToMoveTo);
-                        await this.client.messageMove(uid, folderToMoveTo);
+                        await this.client.mailboxOpen('INBOX');  // Reopen INBOX
+                        await this.client.messageMove(uid, folderToMoveTo, { uid: true, useLabels: true });
+                        await this.client.mailboxClose();  // Close to commit changes
                         logger.info(`Successfully moved email #${uid} after creating folder`, {
                             action: 'move',
                             status: 'completed',
@@ -227,9 +232,13 @@ class EmailProcessor {
                 await this.client.mailboxOpen('INBOX');
 
                 // Build search criteria based on settings
-                const searchCriteria = {
-                    since: new Date(this.timestamp),
-                };
+                const searchCriteria = {};
+                
+                // Only add timestamp if useTimestampFilter is true
+                if (config.settings.useTimestampFilter && this.timestamp) {
+                    searchCriteria.since = new Date(this.timestamp);
+                }
+                
                 if (!config.settings.processReadEmails) {
                     searchCriteria.seen = false;
                 }
@@ -246,8 +255,11 @@ class EmailProcessor {
 
                 const totalEmailsFound = allMessages.length;
                 const readStatus = config.settings.processReadEmails ? 'read and unread' : 'unread';
+                const timeFilter = config.settings.useTimestampFilter 
+                    ? ` since ${this.timestamp}`
+                    : ' in inbox';
                 logger.info(
-                    `Found ${totalEmailsFound} ${readStatus} messages since ${this.timestamp}`
+                    `Found ${totalEmailsFound} ${readStatus} messages${timeFilter}`
                 );
                 logger.info(
                     `Processing up to ${config.settings.maxEmailsToProcessAtOnce} emails in batches of ${this.batchSize}`
@@ -306,6 +318,9 @@ class EmailProcessor {
                     duration: `${duration / 1000}s`,
                     totalFound: totalEmailsFound,
                 });
+
+                // Explicitly close mailbox to commit changes
+                await this.client.mailboxClose();
 
                 await saveLastTimestamp(
                     new Date().toISOString(),

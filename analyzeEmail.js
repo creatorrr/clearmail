@@ -2,6 +2,24 @@ const { executeOpenAIWithRetry, fixJSON } = require('./utilities');
 const axios = require('axios');
 const config = require('./config');
 const { logger } = require('./server');
+const crypto = require('crypto');
+const fs = require('fs').promises;
+const path = require('path');
+
+async function ensureCacheDir() {
+    const cacheDir = path.join(__dirname, 'cache');
+    try {
+        await fs.mkdir(cacheDir, { recursive: true });
+    } catch (error) {
+        logger.error('Error creating cache directory:', error);
+    }
+    return cacheDir;
+}
+
+function createPromptHash(prompt, params) {
+    const content = JSON.stringify({ prompt, params });
+    return crypto.createHash('md5').update(content).digest('hex');
+}
 
 class EmailAnalyzer {
     constructor() {
@@ -43,6 +61,8 @@ class EmailAnalyzer {
 
         const categoriesList = config.categoryFolderNames;
         return `Analyze this email for Diwank Singh Tomer and provide a JSON response.
+
+IMPORTANT: You must respond with valid, parseable JSON only. No other text or explanations outside the JSON object.
 
 Output Schema:
 {
@@ -112,7 +132,7 @@ Respond with valid JSON only. Focus on identifying solicitation patterns and cat
 
     async analyzeWithOpenAI(prompt) {
         await this.waitForAvailableSlot('openai');
-        logger.debug('Sending request to OpenAI');
+        logger.debug('Processing OpenAI request');
         const startTime = Date.now();
 
         const openAIParams = {
@@ -136,11 +156,35 @@ Always respond with valid JSON and be particularly strict about filtering solici
             ],
         };
 
+        // Generate hash for caching
+        const promptHash = createPromptHash(prompt, openAIParams);
+        const cacheDir = await ensureCacheDir();
+        const cacheFile = path.join(cacheDir, `${promptHash}.json`);
+
+        // Try to read from cache first
+        try {
+            const cached = await fs.readFile(cacheFile, 'utf-8');
+            const cachedData = JSON.parse(cached);
+            logger.debug('Cache hit', { promptHash });
+            return cachedData;
+        } catch (error) {
+            // Cache miss or error reading cache, proceed with API call
+            logger.debug('Cache miss', { promptHash });
+        }
+
         const requestPromise = (async () => {
             try {
                 const result = await executeOpenAIWithRetry(openAIParams);
                 const duration = Date.now() - startTime;
                 logger.debug('OpenAI response received', { duration: `${duration}ms` });
+
+                // Cache the result
+                try {
+                    await fs.writeFile(cacheFile, result);
+                    logger.debug('Cached response', { promptHash });
+                } catch (cacheError) {
+                    logger.error('Error caching response:', cacheError);
+                }
 
                 // Remove this promise from the pool once completed
                 this.requestPool.openai = this.requestPool.openai.filter(
