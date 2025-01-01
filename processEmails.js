@@ -11,7 +11,7 @@ class EmailProcessor {
         this.processedCount = 0;
         this.errorCount = 0;
         this.startTime = null;
-        this.batchSize = 25; // Increased batch size
+        this.batchSize = config.settings.batchSize || 100; // Use configured batch size with fallback
         this.batchDelayMs = 2000; // Delay between batches to prevent rate limiting
     }
 
@@ -148,9 +148,6 @@ class EmailProcessor {
                     // Then try to move the message
                     await this.client.messageMove(uid, folderToMoveTo, { uid: true, useLabels: true });
                     
-                    // Close mailbox to commit changes
-                    await this.client.mailboxClose();
-                    
                     logger.info(`Successfully moved email #${uid}`, {
                         action: 'move',
                         status: 'completed',
@@ -168,7 +165,6 @@ class EmailProcessor {
                         await this.client.mailboxCreate(folderToMoveTo);
                         await this.client.mailboxOpen('INBOX');  // Reopen INBOX
                         await this.client.messageMove(uid, folderToMoveTo, { uid: true, useLabels: true });
-                        await this.client.mailboxClose();  // Close to commit changes
                         logger.info(`Successfully moved email #${uid} after creating folder`, {
                             action: 'move',
                             status: 'completed',
@@ -206,24 +202,9 @@ class EmailProcessor {
         try {
             await this.client.connect();
 
-            // Ensure all required folders exist
-            const folders = config.settings.sortIntoCategoryFolders
-                ? config.categoryFolderNames
-                : [config.settings.rejectedFolderName];
-            logger.info('Verifying IMAP folders...', { folders });
-
-            const existingFolders = await this.client.list();
-            const existingPaths = existingFolders.map((f) => f.path);
-
-            for (const folder of folders) {
-                if (!existingPaths.includes(folder)) {
-                    logger.info(`Creating missing folder: ${folder}`);
-                    try {
-                        await this.client.mailboxCreate(folder);
-                    } catch (error) {
-                        logger.error(`Failed to create folder ${folder}:`, error);
-                    }
-                }
+            // Verify folders only if enabled in config
+            if (config.settings.verifyImapFolders) {
+                await this.verifyFolders();
             }
 
             const lock = await this.client.getMailboxLock('INBOX');
@@ -319,9 +300,6 @@ class EmailProcessor {
                     totalFound: totalEmailsFound,
                 });
 
-                // Explicitly close mailbox to commit changes
-                await this.client.mailboxClose();
-
                 await saveLastTimestamp(
                     new Date().toISOString(),
                     config.settings.timestampFilePath
@@ -347,8 +325,29 @@ class EmailProcessor {
                 message: 'Error processing emails.',
                 error: error.message,
             };
-        } finally {
-            await this.client.logout();
+        }
+    }
+
+    // New method to verify folders at startup
+    async verifyFolders() {
+        // Ensure all required folders exist
+        const folders = config.settings.sortIntoCategoryFolders
+            ? config.categoryFolderNames
+            : [config.settings.rejectedFolderName];
+        logger.info('Verifying IMAP folders...', { folders });
+
+        const existingFolders = await this.client.list();
+        const existingPaths = existingFolders.map((f) => f.path);
+
+        for (const folder of folders) {
+            if (!existingPaths.includes(folder)) {
+                logger.info(`Creating missing folder: ${folder}`);
+                try {
+                    await this.client.mailboxCreate(folder);
+                } catch (error) {
+                    logger.error(`Failed to create folder ${folder}:`, error);
+                }
+            }
         }
     }
 }

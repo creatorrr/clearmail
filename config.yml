@@ -5,11 +5,17 @@ settings:
     # if set to false, OpenAI is used
     useLocalLLM: false
 
+    # if true, verify that IMAP folders exist before processing emails
+    verifyImapFolders: false
+
     # maximum number of characters to feed the AI of an email body. too many characters can start to confuse it
     maxEmailChars: 2500
 
     # max number of emails to process in a single go, probably wise to keep this under 100
-    maxEmailsToProcessAtOnce: 100
+    maxEmailsToProcessAtOnce: 500
+
+    # number of emails to process in parallel per batch
+    batchSize: 100
 
     # process any new unread emails every x seconds
     refreshInterval: 15

@@ -60,74 +60,39 @@ class EmailAnalyzer {
         });
 
         const categoriesList = config.categoryFolderNames;
-        return `Analyze this email for Diwank Singh Tomer and provide a JSON response.
+        return `You are an email analysis assistant. Your task is to analyze the email and return a JSON object with exactly three fields: meets_criteria (boolean), category (string), and explanation (string).
 
-IMPORTANT: You must respond with valid, parseable JSON only. No other text or explanations outside the JSON object.
+CRITICAL: You must ONLY output a valid JSON object. No other text, no markdown, no explanations outside the JSON.
+Example of correct response:
+{"meets_criteria": true, "category": "Auto/News", "explanation": "Direct business communication about project status"}
 
-Output Schema:
-{
-    "meets_criteria": boolean,    // Whether the email should be kept in primary inbox
-    "category": string,          // One of: ${JSON.stringify(categoriesList)}
-    "explanation": string        // Brief explanation of the decision and categorization
-}
+Categories (choose exactly one):
+${JSON.stringify(categoriesList)}
 
-Category Definitions:
-1. Auto/Blog
-   - Emails from blogs/newsletters about AI, startups, tech, or philosophy
-   - Keywords: "AI research," "startup insights," "tech trends," "philosophy of mind"
-
-2. Auto/Social Updates
-   - Direct mentions/messages from LinkedIn, Discord, or community interactions
-   - Event notifications, discussions, personal interactions with collaborators
-
-3. Auto/Financial
-   - Updates about personal finance, Julep revenue, YC, financial services
-   - Keywords: "investment update," "bank statement," "revenue report"
-   - Exclude promotional financial services
-
-4. Auto/News
-   - Curated industry news about AI, startups, or tech
-   - Major global/industry events only
-   - Keywords: "AI breakthrough," "startup funding," "tech trends"
-
-5. Auto/Marketing
-   - Updates from used tools/platforms (Stripe, GitHub, AWS)
-   - Keywords: "new feature," "platform update," "account change"
-   - Exclude cold sales pitches
-
-6. Auto/Other
-   - General-purpose emails, civic updates, travel notifications
-   - Non-spam emails that don't fit other categories
-
-7. Auto/Unsubscribe
-   - Solicitation emails matching these patterns:
-     * Subject contains: "Partnership," "Sponsorship," "Collaboration," "Proposal"
-     * Self-promotional intros ("I'm [name], [title]")
-     * Metrics boasting ("250k+ students," "15k+ subscribers")
-     * Generic collaboration requests
-     * External profile links (YouTube, Udemy, LinkedIn)
-
-Keep Criteria (Primary Inbox):
+Criteria for meets_criteria=true (keep in primary inbox):
 - Direct personal communications
 - Important updates from known services
 - Relevant industry insights
 - Financial updates from known institutions
 ${config.rules.keep}
 
-Reject Criteria (Auto Categories):
+Criteria for meets_criteria=false (move to category folder):
 - Marketing emails from known services
 - Newsletter updates
 - Social media notifications
 - Generic announcements
-- Any solicitation patterns listed above
+- Solicitation patterns:
+  * Subject has: "Partnership," "Sponsorship," "Collaboration," "Proposal"
+  * Self-promotional intros ("I'm [name], [title]")
+  * Metrics boasting ("250k+ students," "15k+ subscribers")
+  * Generic collaboration requests
+  * External profile links
 ${config.rules.reject}
 
-Email to Analyze:
+Email to analyze:
 Subject: ${emailSubject}
 From: ${emailSender}
-Body: ${emailBody}
-
-Respond with valid JSON only. Focus on identifying solicitation patterns and categorizing accurately.`;
+Body: ${emailBody}`;
     }
 
     async analyzeWithOpenAI(prompt) {
@@ -284,7 +249,22 @@ Your task is to identify solicitations and categorize emails appropriately.`,
                 : await this.analyzeWithLocalLLM(prompt);
 
             try {
+                logger.debug('Raw analysis result:', {
+                    result,
+                    resultType: typeof result,
+                    resultLength: result.length
+                });
+
                 const parsedResult = JSON.parse(result);
+                logger.debug('Successfully parsed result:', {
+                    parsedResult,
+                    hasRequiredFields: {
+                        meets_criteria: 'meets_criteria' in parsedResult,
+                        category: 'category' in parsedResult,
+                        explanation: 'explanation' in parsedResult
+                    }
+                });
+
                 const analysis = {
                     judgment: parsedResult.meets_criteria,
                     category: parsedResult.category,
@@ -301,17 +281,23 @@ Your task is to identify solicitations and categorize emails appropriately.`,
                 this.logAnalysisResults(emailSender, emailDate, emailSubject, emailBody, analysis);
                 return analysis;
             } catch (parseError) {
-                logger.error('Error parsing JSON result:', {
+                logger.error('Error parsing JSON result', {
                     error: parseError.message,
+                    errorName: parseError.name,
                     result,
+                    resultType: typeof result,
+                    resultLength: result ? result.length : 0,
+                    // Try to show the problematic part of the string
+                    snippet: result ? result.substring(0, 200) : 'null or undefined result'
                 });
                 return this.defaultAnalysis;
             }
         } catch (error) {
-            logger.error('Error analyzing email:', {
+            logger.error('Error analyzing email', {
                 error: error.message,
                 subject: emailSubject,
                 sender: emailSender,
+                stack: error.stack
             });
             return this.defaultAnalysis;
         }
