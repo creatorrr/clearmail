@@ -30,33 +30,34 @@ For each new email identified, clearmail performs the following steps:
 
 ```yaml
 rules:
-  keep: |
-    * Email is a direct reply to one of my sent emails
-    * Email contains tracking information for a recent purchase
-    * Subject: "Invoice" or "Receipt" (Transactional emails)
+    keep: |
+        * Email is a direct reply to one of my sent emails
+        * Email contains tracking information for a recent purchase
+        * Subject: "Invoice" or "Receipt" (Transactional emails)
 ```
 
 #### Example Rules for Rejecting Emails
 
 ```yaml
 rules:
-  reject: |
-    * Bulk emails that are not addressed to me specifically by name
-    * Subject contains "Subscribe" or "Join now"
-    * Email looks like a promotion
+    reject: |
+        * Bulk emails that are not addressed to me specifically by name
+        * Subject contains "Subscribe" or "Join now"
+        * Email looks like a promotion
 ```
 
-- **Categorizing or Moving the Email:** If the email is worth reading according to your rules, it is left in the inbox and starred.  If it's not, its either:
+- **Categorizing or Moving the Email:** If the email is worth reading according to your rules, it is left in the inbox and starred. If it's not, its either:
+
     - Moved to the rejection folder (as named in `rejectedFolderName`), if the email is considered not important.
-    - Moved to a specific label like `Social`, if `sortIntoCategoryFolders` is enabled and the email matches one of the specified categories.  You can specify any categories you want!  For example:
+    - Moved to a specific label like `Social`, if `sortIntoCategoryFolders` is enabled and the email matches one of the specified categories. You can specify any categories you want! For example:
 
         ```yaml
         categoryFolderNames:
-          - News
-          - Social Updates
-          - Work
-          - Family
-          - Financial
+            - News
+            - Social Updates
+            - Work
+            - Family
+            - Financial
         ```
 
 ### 5. Wrap Up
@@ -81,24 +82,30 @@ Follow these steps to get clearmail up and running on your system:
 To securely access your Gmail account using IMAP in applications like clearmail, especially when you have 2-Step Verification enabled, you'll need to create and use an app password. An app password is a 16-character code that allows less secure apps to access your Google Account. Here's a detailed guide on how to create and use app passwords for Gmail IMAP access:
 
 #### Prerequisites
+
 - **2-Step Verification:** To create an app password, your Google Account must have 2-Step Verification enabled. This adds an additional layer of security to your account by requiring a second verification step during sign-in.
 
 #### Creating an App Password
 
 1. **Go to Your Google Account:**
+
     - Navigate to [Google Account settings](https://myaccount.google.com/).
 
 2. **Select Security:**
+
     - Find the "Security" tab on the left-hand side and click on it to access your security settings.
 
 3. **Access 2-Step Verification Settings:**
+
     - Under the "Signing in to Google" section, find and select "2-Step Verification." You may need to sign in to your account again for security purposes.
 
 4. **Open App Passwords Page:**
+
     - Scroll down to the bottom of the 2-Step Verification page, and you should see the "App passwords" option. Click on it to proceed.
     - If you do not see this option, ensure that 2-Step Verification is indeed enabled and not set up exclusively for security keys. Note that app passwords may not be available for accounts managed by work, school, or other organizations, or for accounts with Advanced Protection enabled.
 
 5. **Generate a New App Password:**
+
     - Click on "Select app" and choose "Mail" as the application you want to generate the password for.
     - Choose the device you are generating the password for (e.g., Windows Computer, iPhone, or other).
     - Click on "Generate" to create your new app password.
@@ -134,15 +141,19 @@ To integrate your environment with clearmail, you'll need to configure the `.env
 #### .env File Configuration
 
 1. **OPENAI_API_KEY**:
-    - **Description**: Optional.  If you choose to not use a local LLM, fill in your OpenAI API key here.
+
+    - **Description**: Optional. If you choose to not use a local LLM, fill in your OpenAI API key here.
 
 2. **IMAP_USER**:
+
     - **Description**: Your email address that you will use to access your Gmail account via IMAP.
 
 3. **IMAP_PASSWORD**:
+
     - **Description**: Use app password generated above.
 
 4. **IMAP_HOST**:
+
     - **Description**: The IMAP server address for Gmail.
     - **Default Value**: `imap.gmail.com`. This is pre-set for Gmail accounts and typically does not need to be changed.
 
@@ -171,8 +182,9 @@ Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine, and it's
 1. **Download Node.js**: Visit the [official Node.js website](https://nodejs.org/) to download the installer for your operating system. It is recommended to download the LTS (Long Term Support) version for better stability.
 
 2. **Install Node.js**:
-   - **Windows & macOS**: Run the downloaded installer and follow the on-screen instructions. The installer includes Node.js and npm (Node Package Manager).
-   - **Linux**: You can install Node.js via a package manager. Instructions for different distributions are available on the Node.js website under the [Linux installations guide](https://nodejs.org/en/download/package-manager/).
+
+    - **Windows & macOS**: Run the downloaded installer and follow the on-screen instructions. The installer includes Node.js and npm (Node Package Manager).
+    - **Linux**: You can install Node.js via a package manager. Instructions for different distributions are available on the Node.js website under the [Linux installations guide](https://nodejs.org/en/download/package-manager/).
 
 3. **Verify Installation**: Open a terminal or command prompt and type the following commands to verify that Node.js and npm are installed correctly:
 
@@ -181,7 +193,7 @@ Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine, and it's
     npm --version
     ```
 
-   If the installation was successful, you should see the version numbers for both Node.js and npm.
+    If the installation was successful, you should see the version numbers for both Node.js and npm.
 
 #### Navigating to the clearmail Directory
 
@@ -191,14 +203,14 @@ Before running the `clearmail` process, make sure you are in the directory where
 
 2. **Navigate to the clearmail Directory**: Use the `cd` (change directory) command to navigate to the folder where you have `clearmail` installed. For example, if you have `clearmail` in a folder named "clearmail" on your desktop, the command might look like this:
 
-   - On Windows:
-       ```bash
-       cd Desktop\clearmail
-       ```
-   - On Linux or macOS:
-       ```bash
-       cd ~/Desktop/clearmail
-       ```
+    - On Windows:
+        ```bash
+        cd Desktop\clearmail
+        ```
+    - On Linux or macOS:
+        ```bash
+        cd ~/Desktop/clearmail
+        ```
 
 #### Running clearmail
 
@@ -208,16 +220,15 @@ Once Node.js is installed and you are in the correct directory, you can start `c
 node server.js
 ```
 
-This will initialize clearmail and begin sorting your emails according to the defined rules.  It will continue to run at the defined interval and output data about its activities to the shell.
+This will initialize clearmail and begin sorting your emails according to the defined rules. It will continue to run at the defined interval and output data about its activities to the shell.
 
 #### Stopping clearmail
 
 To stop the clearmail process type `<ctrl> + c` on Mac.
 
-
 ## Large Language Model (LLM) Choice: Local or OpenAI
 
-Clearmail supports integration with any running local LLM and is configured out of the box to support default LM Studio settings. The advantage of Local LLMs is privacy and zero inference costs, but the tradeoff is likely performance.  For that reason, clearmail also supports using any OpenAI chat completion model.
+Clearmail supports integration with any running local LLM and is configured out of the box to support default LM Studio settings. The advantage of Local LLMs is privacy and zero inference costs, but the tradeoff is likely performance. For that reason, clearmail also supports using any OpenAI chat completion model.
 
 ### Local Option: Setting Up LM Studio
 
@@ -229,7 +240,7 @@ Clearmail supports integration with any running local LLM and is configured out 
 
 3. **Download a Language Model:** Any model can work, but we recommend searching for `TheBloke/Mistral-7B-Instruct-v0.2-code-ft-GGUF` within LM Studio's model marketplace and download any of the models listed there. These models are specifically tailored for instruction-following tasks and code generation, making them well-suited for analyzing and categorizing emails.
 
-4. **Specify the Connection String:** After setting up the inference server, note the connection string provided by LM Studio. If you modify it, update clearmail's `config.yml` under the `localLLM.postURL` field to ensure clearmail can communicate with the local LLM server.  If you don't modify it, clearmail will work out of the box with LMStudio's loaded model.
+4. **Specify the Connection String:** After setting up the inference server, note the connection string provided by LM Studio. If you modify it, update clearmail's `config.yml` under the `localLLM.postURL` field to ensure clearmail can communicate with the local LLM server. If you don't modify it, clearmail will work out of the box with LMStudio's loaded model.
 
 ### Configuration in clearmail
 
@@ -237,10 +248,10 @@ Once your LM Studio server is running and the model is downloaded, configure cle
 
 ```yaml
 settings:
-  useLocalLLM: true
+    useLocalLLM: true
 
 localLLM:
-  postURL: http://localhost:1234/v1/chat/completions  # Replace with your actual LM Studio connection string
+    postURL: http://localhost:1234/v1/chat/completions # Replace with your actual LM Studio connection string
 ```
 
 Make sure the `useLocalLLM` setting is set to `true` and the `postURL` points to your running LM Studio inference server.
@@ -254,9 +265,11 @@ For best performance, we recommend using OpenAI's `gpt-4.5-turbo-0125` model, wh
 #### Obtaining Your OpenAI API Key
 
 1. **Log in or Sign Up to OpenAI**:
+
     - Visit the OpenAI platform at [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys). If you already have an account, log in using your credentials. If you don't, you'll need to sign up and create an account.
 
 2. **Create a New Secret Key**:
+
     - Once logged in, you'll be directed to the API keys section of your OpenAI account. Look for the "Create new secret key" button and click on it. This action will generate a new API key for you to use with applications like clearmail.
 
 3. **Copy Your Key**:
@@ -272,7 +285,7 @@ For best performance, we recommend using OpenAI's `gpt-4.5-turbo-0125` model, wh
     OPENAI_API_KEY=your_copied_api_key_here
     ```
 
-   Replace `your_copied_api_key_here` with the API key you copied from the OpenAI platform.
+    Replace `your_copied_api_key_here` with the API key you copied from the OpenAI platform.
 
 3. **Save Changes**: After entering your API key, save the `.env` file. This update will allow clearmail to use your OpenAI API key to access the AI services required for email analysis.
 
